@@ -1,0 +1,37 @@
+.container {
+	border-top: 1px solid black;
+}
+
+.poll {
+	height: 400px;
+	display: flex;
+	flex-direction: column;
+	flex-wrap: wrap;
+}
+
+.chart {
+	height: 250px;
+	width: 100%;
+	margin: 0 0 80px 0;
+}
+
+.disabled {
+	pointer-events: none;
+}
+
+.wrapper {
+	text-align: center;
+}
+
+.result {
+	position: absolute;
+	top: 50%;
+}
+
+#voteTitle {
+	margin: auto;
+	width: 50%;
+	// border: 2px solid green;
+	padding: 10px;
+	text-align: center;
+}

@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<!-- Compiled and minified CSS -->
+	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/css/materialize.min.css">
+	<link rel="stylesheet" href="src/styles.css">
+	<title>PusherPoll</title>
+</head>
+<body onload="init()">
+	<h4 id="voteTitle" value="2104 정모">통마 4월 정모 투표</h4>
+	<div id="js-container"></div>
+	<!--
+		<h5>가창상 (노래로 감동을 준 팀)</h5>
+		<form id="js-first-form" action="">
+			<p>
+				<label>
+					<input id="team1" value="땅콩가루" type="radio" name="first">
+					<span>땅콩가루2</span>
+				</label>
+			</p>
+			<p>
+				<label>
+					<input id="team2" value="열두소리" type="radio" name="first">
+					<span>열두소리2</span>
+				</label>
+			</p>
+			<input type="submit" value="투표" class="btn">
+		</form>
+		<div id="js-first-chart-container" style="height: 300px; width: 100%;"></div>
+	--!>
+	<div class="wrapper">
+		<input type="button" value="결과보기" class="btn" style="margin-bottom: 50px" onclick="showResult()">
+	</div>
+
+	<!-- Compiled and minified JavaScript -->
+	<script src="https://code.jquery.com/jquery-3.6.0.js" integrity="sha256-H+K7U5CnXl1h5ywQfKtSj8PCmoN9aaq30gDh27Xc0jk=" crossorigin="anonymous"></script>
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
+	<script src="https://cdn.jsdelivr.net/npm/pusher-js@7.0.3/dist/web/pusher.min.js"></script>
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/canvasjs/1.7.0/canvasjs.min.js"></script> 
+
+	<script src="main.js"></script>
+	<script src="tongmaPoll.js"></script>
+	<script src="localstorage.js"></script>
+</body>
+</html>
