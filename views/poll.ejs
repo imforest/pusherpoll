@@ -4,6 +4,8 @@
   <meta charset="UTF-8">
 	<!-- Compiled and minified CSS -->
 	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/css/materialize.min.css">
+	<!-- Using a favicon-->
+	<link rel="icon" type="image/png" sizes="96x96" href="/favicon-96x96.png">
   <title>Poll</title>
 </head>
 <body onload="init()">
@@ -15,7 +17,7 @@
 	<% } %>
 
 	<div class="wrapper">
-		<input id="resultBtn" type="button" value="결과보기" class="btn" style="margin-bottom: 50px" onclick="showResult()">
+		<input id="resultBtn" type="button" value="투표 결과 보기" class="btn" style="margin-bottom: 50px" onclick="showResult()">
 	</div>
 
 	<!-- Compiled and minified JavaScript -->
@@ -143,11 +145,13 @@ function paintChart(containerId, prizeId, data) {
 		animationEnabled: true,
 		theme: 'light2',
 		title: {
-				text: getTitle(prizeId)
+				text: getTitle(prizeId),
+				fontSize: 14
 		},
 		axisX: {
 			interval: 1,
-			labelAngle: 45
+			labelFontSize: 12,
+			labelMaxWidth: 50,
 		},
 		axisY: {
 				title: '득표수',
@@ -189,6 +193,7 @@ function createButton(prize) {
 	input.name = prize.id;
 	input.value = '투표';
 	input.classList = 'btn';
+	input.style.width = '25%';
 	input.disabled = true;
 
 	input.addEventListener('click', (e) => {
@@ -203,11 +208,12 @@ function createButton(prize) {
 	return input;
 }
 
-function makePoll(prize, teams) {
+function makePoll(prize, index, teams) {
 	const div = document.createElement("div");
 	div.classList = 'container';
 	const h5 = document.createElement("h5");
-	h5.textContent = prize.name;
+	h5.style.color = 'chocolate';
+	h5.textContent = `${index + 1}. ${prize.name}`;
 	const form = document.createElement("form");
 	form.action = '';
 	const listDiv = document.createElement("div");
@@ -218,9 +224,9 @@ function makePoll(prize, teams) {
 	div.appendChild(form);
 	teams.sort( (a, b) => a.name < b.name ? -1 : 1)
 		.forEach(team => {
-				const item = makeItem(prize.id, team);
-				listDiv.appendChild(item);
-				});
+			const item = makeItem(prize.id, team);
+			listDiv.appendChild(item);
+		});
 	form.appendChild(listDiv);
 	form.appendChild(button);
 
@@ -236,17 +242,17 @@ function makeItem(prizeId, team) {
 	input.classList = 'item';
 	input.value = team.name;
 	const span = document.createElement("span");
-	span.textContent = `${team.name} - ${team.song}`;
-	span.style.fontSize = '1.2rem';
+	span.style.fontSize = '1.5rem';
+	span.innerHTML = `<b style="color:black;">${team.name}</b> <br> ${team.song}`;
 
 	p.appendChild(label);
 	label.appendChild(input);
 	label.appendChild(span);
 
 	input.addEventListener('click', (e) => {
-			const button = document.querySelector(`input[name=${prizeId}].btn`);
-			button.disabled = false;
-			});
+		const button = document.querySelector(`input[name=${prizeId}].btn`);
+		button.disabled = false;
+	});
 
 	return p;
 }
@@ -301,9 +307,9 @@ function initVoteForm(poll) {
 	];
 	*/
 
-	poll.prizes.forEach(prize => {
+	poll.prizes.forEach((prize, index) => {
 		const chartId = `js-${prize.id}-chart-container`;
-		const form = makePoll(prize, poll.teams);
+		const form = makePoll(prize, index, poll.teams);
 		const chart = makeChart(chartId);
 
 		form.appendChild(chart);
