@@ -4,6 +4,8 @@
   <meta charset="UTF-8">
 	<!-- Compiled and minified CSS -->
 	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/css/materialize.min.css">
+	<!-- Using a favicon-->
+	<link rel="icon" type="image/png" sizes="96x96" href="/favicon-32x32.png">
   <title>Poll</title>
 </head>
 <body onload="init()">
@@ -15,8 +17,18 @@
 	<% } %>
 
 	<div class="wrapper">
-		<input id="resultBtn" type="button" value="결과보기" class="btn" style="margin-bottom: 50px" onclick="showResult()">
+		<input id="resultBtn" type="button" value="투표 결과 보기" class="btn" style="margin-bottom: 50px" onclick="showResult()">
 	</div>
+
+	<audio preload="auto" data-key="0" src="/sounds/clap.wav"></audio>
+	<audio preload="auto" data-key="1" src="/sounds/hihat.wav"></audio>
+	<audio preload="auto" data-key="2" src="/sounds/kick.wav"></audio>
+	<audio preload="auto" data-key="3" src="/sounds/openhat.wav"></audio>
+	<audio preload="auto" data-key="4" src="/sounds/boom.wav"></audio>
+	<audio preload="auto" data-key="5" src="/sounds/ride.wav"></audio>
+	<audio preload="auto" data-key="6" src="/sounds/snare.wav"></audio>
+	<audio preload="auto" data-key="7" src="/sounds/tom.wav"></audio>
+	<audio preload="auto" data-key="8" src="/sounds/tink.wav"></audio>
 
 	<!-- Compiled and minified JavaScript -->
 	<script src="https://code.jquery.com/jquery-3.6.0.js" integrity="sha256-H+K7U5CnXl1h5ywQfKtSj8PCmoN9aaq30gDh27Xc0jk=" crossorigin="anonymous"></script>
@@ -26,12 +38,12 @@
 	<script>
 
 // local storage name
-const TONGMA_LS = 'tongma';
-var LS = {};
+	const TONGMA_LS = 'tongma';
+	var LS = {};
 
 LS.getExistingTitleMap = function() {
 	// Parse any JSON previously stored in all Entries
-  var map = JSON.parse(localStorage.getItem(TONGMA_LS), reviver);
+	var map = JSON.parse(localStorage.getItem(TONGMA_LS), reviver);
 
 	if(!map) return new Map();
 	else return map;
@@ -39,8 +51,8 @@ LS.getExistingTitleMap = function() {
 
 LS.getNameMap = function(titleMap) {
 	const map = titleMap.get(voteTitle)
-	if(!map) return new Map();
-	else return map;
+		if(!map) return new Map();
+		else return map;
 }
 
 LS.writeVote = function(res) {
@@ -60,8 +72,8 @@ LS.readVote = function() {
 function replacer(key, value) {
 	if (value instanceof Map) {
 		return {
-			dataType: 'Map',
-			value: Array.from(value.entries()), // or with spread: value: [...value]
+dataType: 'Map',
+						value: Array.from(value.entries()), // or with spread: value: [...value]
 		};
 	} else {
 		return value;
@@ -90,24 +102,24 @@ function setPusher(chart, prizeId) {
 	Pusher.logToConsole = true;
 
 	var pusher = new Pusher('ff4bf85a2ebd9ce87f14', {
-		cluster: 'ap3',
-		encrypted: true
-	});
+cluster: 'ap3',
+encrypted: true
+});
 
-	var channel = pusher.subscribe('tongma-poll');
-	channel.bind(prizeId, function(data) {
+var channel = pusher.subscribe('tongma-poll');
+channel.bind(prizeId, function(data) {
 		chart.options.data[0].dataPoints.map(x => {
-			if(x.label == data.team) {
+				if(x.label == data.team) {
 				x.y += data.points;
 				totalVoteMap.set(prizeId, totalVoteMap.get(prizeId) + data.points);
 				chart.options.title.text = getTitle(prizeId);
 				return x;
-			} else {
+				} else {
 				return x;
-			}
-		});
+				}
+				});
 		chart.render();
-	});
+		});
 }
 
 function compareDataPointYDescend(dataPoint1, dataPoint2) {
@@ -143,11 +155,13 @@ function paintChart(containerId, prizeId, data) {
 		animationEnabled: true,
 		theme: 'light2',
 		title: {
-				text: getTitle(prizeId)
+				text: getTitle(prizeId),
+				fontSize: 14
 		},
 		axisX: {
 			interval: 1,
-			labelAngle: 45
+			labelFontSize: 12,
+			labelMaxWidth: 50,
 		},
 		axisY: {
 				title: '득표수',
@@ -189,6 +203,7 @@ function createButton(prize) {
 	input.name = prize.id;
 	input.value = '투표';
 	input.classList = 'btn';
+	input.style.minWidth = '25%';
 	input.disabled = true;
 
 	input.addEventListener('click', (e) => {
@@ -203,11 +218,12 @@ function createButton(prize) {
 	return input;
 }
 
-function makePoll(prize, teams) {
+function makePoll(prize, index, teams) {
 	const div = document.createElement("div");
 	div.classList = 'container';
 	const h5 = document.createElement("h5");
-	h5.textContent = prize.name;
+	h5.style.color = 'chocolate';
+	h5.textContent = `${index + 1}. ${prize.name}`;
 	const form = document.createElement("form");
 	form.action = '';
 	const listDiv = document.createElement("div");
@@ -218,9 +234,9 @@ function makePoll(prize, teams) {
 	div.appendChild(form);
 	teams.sort( (a, b) => a.name < b.name ? -1 : 1)
 		.forEach(team => {
-				const item = makeItem(prize.id, team);
-				listDiv.appendChild(item);
-				});
+			const item = makeItem(prize.id, team);
+			listDiv.appendChild(item);
+		});
 	form.appendChild(listDiv);
 	form.appendChild(button);
 
@@ -236,17 +252,17 @@ function makeItem(prizeId, team) {
 	input.classList = 'item';
 	input.value = team.name;
 	const span = document.createElement("span");
-	span.textContent = `${team.name} - ${team.song}`;
-	span.style.fontSize = '1.2rem';
+	span.style.fontSize = '1.5rem';
+	span.innerHTML = `<b style="color:black;">${team.name}</b> <br> ${team.song}`;
 
 	p.appendChild(label);
 	label.appendChild(input);
 	label.appendChild(span);
 
 	input.addEventListener('click', (e) => {
-			const button = document.querySelector(`input[name=${prizeId}].btn`);
-			button.disabled = false;
-			});
+		const button = document.querySelector(`input[name=${prizeId}].btn`);
+		button.disabled = false;
+	});
 
 	return p;
 }
@@ -301,9 +317,9 @@ function initVoteForm(poll) {
 	];
 	*/
 
-	poll.prizes.forEach(prize => {
+	poll.prizes.forEach((prize, index) => {
 		const chartId = `js-${prize.id}-chart-container`;
-		const form = makePoll(prize, poll.teams);
+		const form = makePoll(prize, index, poll.teams);
 		const chart = makeChart(chartId);
 
 		form.appendChild(chart);
@@ -340,14 +356,39 @@ function setVoteDueDate(poll) {
 	setInterval(firstDateIsPastDayComparedToSecond, 1000 * 60, dueDate, new Date());
 }
 
+function initEventListener() {
+	const items = document.querySelectorAll('input.item'); 
+	items.forEach(item => item.addEventListener('change', playSound));
+}
+
 function init() {
 	const poll = JSON.parse('<%= poll %>'.replace(/&#34;/g, '"'));
 	voteTitle = poll.title;
 
 	initVoteForm(poll);
 	setVoteDueDate(poll);
+	initEventListener();
 }
 
+	</script>
+
+	<script>
+function getRandomInt(min, max) {
+	min = Math.ceil(min);
+	max = Math.floor(max);
+	return Math.floor(Math.random() * (max - min)) + min; //최댓값은 제외, 최솟값은 포함
+}
+
+function playSound(e) {
+	const min = 0;
+	const max = document.querySelectorAll('audio').length;
+	const dataKey = getRandomInt(min, max);
+	const audio = document.querySelector(`audio[data-key="${dataKey}"]`);
+	if (!audio) return;
+
+	audio.currentTime = 0;
+	audio.play();
+}
 	</script>
 
 	<style>
@@ -394,5 +435,6 @@ function init() {
 	text-align: center;
 }
 	</style>
+
 </body>
 </html>
