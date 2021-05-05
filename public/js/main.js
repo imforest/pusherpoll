@@ -8,24 +8,25 @@ function setPusher(chart, prizeId) {
 	Pusher.logToConsole = true;
 
 	var pusher = new Pusher('ff4bf85a2ebd9ce87f14', {
-cluster: 'ap3',
-encrypted: true
-});
+		cluster: 'ap3',
+		encrypted: true
+	});
 
-var channel = pusher.subscribe('tongma-poll');
-channel.bind(prizeId, function(data) {
+	var channel = pusher.subscribe('tongma-poll');
+	channel.bind(prizeId, function(data) {
 		chart.options.data[0].dataPoints.map(x => {
-				if(x.label == data.team) {
+			if(x.label == data.team) {
 				x.y += data.points;
 				totalVoteMap.set(prizeId, totalVoteMap.get(prizeId) + data.points);
 				chart.options.title.text = getTitle(prizeId);
 				return x;
-				} else {
+			} else {
 				return x;
-				}
-				});
-		chart.render();
+			}
 		});
+
+		chart.render();
+	});
 }
 
 function compareDataPointYDescend(dataPoint1, dataPoint2) {
@@ -61,8 +62,8 @@ function paintChart(containerId, prizeId, data) {
 		animationEnabled: true,
 		theme: 'light2',
 		title: {
-				text: getTitle(prizeId),
-				fontSize: 14
+			text: getTitle(prizeId),
+			fontSize: 14
 		},
 		axisX: {
 			interval: 1,
@@ -71,14 +72,14 @@ function paintChart(containerId, prizeId, data) {
 			labelAngle: 45,
 		},
 		axisY: {
-				title: '득표수',
-				titleFontSize: 12,
-				includeZero: true
+			title: '득표수',
+			titleFontSize: 12,
+			includeZero: true
 		},
 		data: [{
-				type: 'column',
-				yValueFormatString: '#,### 표',
-				dataPoints: dataPoints
+			type: 'column',
+			yValueFormatString: '#,### 표',
+			dataPoints: dataPoints
 		}]
 	});
 
@@ -100,7 +101,7 @@ function showChart(containerId, prizeId) {
 function handleFormSubmit(form, prizeId) {
 	form.addEventListener('submit', (e) => {
 		const choice = document.querySelector(`input[name=${prizeId}]:checked`).value;
-		const data = {team: choice, title: voteTitle, name: prizeId};
+		const data = {team: choice, title: voteTitle, name: prizeId, userAgent: navigator.userAgent};
 
 		fetch(`/${pollUrl}`, {
 			method: 'post',

@@ -82,6 +82,7 @@ router.post('/', (req, res) => {
 		points: 1,
 		createdAt: new Date().toString(),
 		ip: req.headers['x-forwarded-for'] || req.connection.remoteAddress,
+		userAgent: req.body.userAgent,
 	}
 
 	new Vote(newVote).save().then(vote => {

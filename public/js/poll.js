@@ -20,7 +20,7 @@ function createButton(prize) {
 		const button = document.querySelector(`input[name=${prize.id}].btn`);
 		button.value = `${prize.name} 투표 완료`;
 		button.classList.add("disabled");
-		});
+	});
 
 	return input;
 }
