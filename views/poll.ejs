@@ -2,14 +2,21 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-	<!-- Compiled and minified CSS -->
+	<!--Import Google Icon Font-->
+	<link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+	<!--Import materialize.css-->
 	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/css/materialize.min.css">
+	<!--Let browser know website is optimized for mobile-->
+	<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 	<!-- Using a favicon-->
 	<link rel="icon" type="image/png" sizes="96x96" href="/favicon-32x32.png">
+
+	<link rel="stylesheet" href="/css/styles.css">
   <title>Poll</title>
 </head>
+
 <body onload="init()">
-  <h4 id="voteTitle">투표 제목</h4>
+  <h5 id="voteTitle">투표 제목</h5>
 	<% if(poll) {  %>
 		<div id="js-container" class="container"></div>	
 	<% } else { %>
@@ -17,350 +24,34 @@
 	<% } %>
 
 	<div class="wrapper">
-		<input id="resultBtn" type="button" value="투표 결과 보기" class="btn" style="margin-bottom: 50px" onclick="showResult()">
+		<input id="resultBtn" type="button" value="투표 결과 보기" class="btn" onclick="showResult()">
 	</div>
 
-	<audio preload="auto" data-key="0" src="/sounds/clap.wav"></audio>
-	<audio preload="auto" data-key="1" src="/sounds/hihat.wav"></audio>
-	<audio preload="auto" data-key="2" src="/sounds/kick.wav"></audio>
-	<audio preload="auto" data-key="3" src="/sounds/openhat.wav"></audio>
-	<audio preload="auto" data-key="4" src="/sounds/boom.wav"></audio>
-	<audio preload="auto" data-key="5" src="/sounds/ride.wav"></audio>
-	<audio preload="auto" data-key="6" src="/sounds/snare.wav"></audio>
-	<audio preload="auto" data-key="7" src="/sounds/tom.wav"></audio>
-	<audio preload="auto" data-key="8" src="/sounds/tink.wav"></audio>
+	<div>
+		<audio preload="auto" data-key="0" src="/sounds/clap.wav"></audio>
+		<audio preload="auto" data-key="1" src="/sounds/hihat.wav"></audio>
+		<audio preload="auto" data-key="2" src="/sounds/kick.wav"></audio>
+		<audio preload="auto" data-key="3" src="/sounds/openhat.wav"></audio>
+		<audio preload="auto" data-key="4" src="/sounds/boom.wav"></audio>
+		<audio preload="auto" data-key="5" src="/sounds/ride.wav"></audio>
+		<audio preload="auto" data-key="6" src="/sounds/snare.wav"></audio>
+		<audio preload="auto" data-key="7" src="/sounds/tom.wav"></audio>
+		<audio preload="auto" data-key="8" src="/sounds/tink.wav"></audio>
+	</div>
 
 	<!-- Compiled and minified JavaScript -->
 	<script src="https://code.jquery.com/jquery-3.6.0.js" integrity="sha256-H+K7U5CnXl1h5ywQfKtSj8PCmoN9aaq30gDh27Xc0jk=" crossorigin="anonymous"></script>
 	<script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
 	<script src="https://cdn.jsdelivr.net/npm/pusher-js@7.0.3/dist/web/pusher.min.js"></script>
 	<script src="https://cdnjs.cloudflare.com/ajax/libs/canvasjs/1.7.0/canvasjs.min.js"></script> 
-	<script>
 
-// local storage name
-	const TONGMA_LS = 'tongma';
-	var LS = {};
-
-LS.getExistingTitleMap = function() {
-	// Parse any JSON previously stored in all Entries
-	var map = JSON.parse(localStorage.getItem(TONGMA_LS), reviver);
-
-	if(!map) return new Map();
-	else return map;
-}
-
-LS.getNameMap = function(titleMap) {
-	const map = titleMap.get(voteTitle)
-		if(!map) return new Map();
-		else return map;
-}
-
-LS.writeVote = function(res) {
-	const vote = res.vote;
-	const titleMap = this.getExistingTitleMap();
-	const nameMap = this.getNameMap(titleMap);
-
-	nameMap.set(vote.name, vote);
-	titleMap.set(vote.title, nameMap);
-	localStorage.setItem(TONGMA_LS, JSON.stringify(titleMap, replacer));
-}
-
-LS.readVote = function() {
-	console.log(localStorage.getItem(TONGMA_LS));
-}
-
-function replacer(key, value) {
-	if (value instanceof Map) {
-		return {
-dataType: 'Map',
-						value: Array.from(value.entries()), // or with spread: value: [...value]
-		};
-	} else {
-		return value;
-	}
-}
-
-function reviver(key, value) {
-	if(typeof value === 'object' && value !== null) {
-		if (value.dataType === 'Map') {
-			return new Map(value.value);
-		}
-	}
-	return value;
-}
-	</script>
+	<!-- Local JavaScript -->
+	<script src="/js/main.js"></script>
+	<script src="/js/poll.js"></script>
+	<script src="/js/audio.js"></script>
+	<script src="/js/localstorage.js"></script>
 
 	<script>
-
-const pollUrl='poll';
-const container = document.querySelector('#js-container');
-const totalVoteMap = new Map();
-var voteTitle;
-
-function setPusher(chart, prizeId) {
-	// Enable pusher logging - don't include this in production
-	Pusher.logToConsole = true;
-
-	var pusher = new Pusher('ff4bf85a2ebd9ce87f14', {
-cluster: 'ap3',
-encrypted: true
-});
-
-var channel = pusher.subscribe('tongma-poll');
-channel.bind(prizeId, function(data) {
-		chart.options.data[0].dataPoints.map(x => {
-				if(x.label == data.team) {
-				x.y += data.points;
-				totalVoteMap.set(prizeId, totalVoteMap.get(prizeId) + data.points);
-				chart.options.title.text = getTitle(prizeId);
-				return x;
-				} else {
-				return x;
-				}
-				});
-		chart.render();
-		});
-}
-
-function compareDataPointYDescend(dataPoint1, dataPoint2) {
-	return dataPoint2.y - dataPoint1.y;
-}
-
-function getSum(total, vote) {
-	return total + vote.points;
-}
-
-function getTitle(prizeId) {
-	return `총 투표수 ${totalVoteMap.get(prizeId)}`;
-}
-
-function paintChart(containerId, prizeId, data) {
-	const votes = data.votes.sort( (a, b) => a.team < b.team ? -1 : 1);
-	totalVoteMap.set(prizeId, votes.reduce(getSum, 0));
-	// Const vote points - acc/current
-	const voteCounts = votes.reduce(
-		(acc, vote) => 
-			((acc[vote.team] = (acc[vote.team] || 0) + vote.points), acc), {});
-
-	let dataPoints = [];
-	const entries = Object.entries(voteCounts);
-	entries.forEach(team => {
-		dataPoints.push({
-			label: team[0], 
-			y: team[1]
-		});
-	});
-
-	var chart = new CanvasJS.Chart(containerId, {
-		animationEnabled: true,
-		theme: 'light2',
-		title: {
-				text: getTitle(prizeId),
-				fontSize: 14
-		},
-		axisX: {
-			interval: 1,
-			labelFontSize: 12,
-			labelMaxWidth: 50,
-		},
-		axisY: {
-				title: '득표수',
-				titleFontSize: 24,
-				includeZero: true
-		},
-		data: [{
-				type: 'column',
-				yValueFormatString: '#,### 표',
-				dataPoints: dataPoints
-		}]
-	});
-
-	// decending order by points
-	chart.options.data[0].dataPoints.sort(compareDataPointYDescend);
-	chart.render();
-
-	setPusher(chart, prizeId);
-}
-
-function showChart(containerId, prizeId) {
-	fetch(`/${pollUrl}/${voteTitle}/${prizeId}`)
-		.then(res => res.json())
-		.then(data => {
-			paintChart(containerId, prizeId, data);
-		});
-}
-
-function makeChart(chartId) {
-	const div = document.createElement("div");
-	div.id = chartId;
-	div.classList = 'chart';
-	return div;
-}
-
-function createButton(prize) {
-	const input = document.createElement("input");
-	input.type = 'submit';
-	input.name = prize.id;
-	input.value = '투표';
-	input.classList = 'btn';
-	input.style.minWidth = '25%';
-	input.disabled = true;
-
-	input.addEventListener('click', (e) => {
-		const items = document.querySelectorAll(`input[name=${prize.id}].item`);
-		items.forEach(item => item.disabled = true);
-
-		const button = document.querySelector(`input[name=${prize.id}].btn`);
-		button.value = `${prize.name} 투표 완료`;
-		button.classList.add("disabled");
-		});
-
-	return input;
-}
-
-function makePoll(prize, index, teams) {
-	const div = document.createElement("div");
-	div.classList = 'container';
-	const h5 = document.createElement("h5");
-	h5.style.color = 'chocolate';
-	h5.textContent = `${index + 1}. ${prize.name}`;
-	const form = document.createElement("form");
-	form.action = '';
-	const listDiv = document.createElement("div");
-	listDiv.classList = 'poll';
-	const button = createButton(prize);
-
-	div.appendChild(h5);
-	div.appendChild(form);
-	teams.sort( (a, b) => a.name < b.name ? -1 : 1)
-		.forEach(team => {
-			const item = makeItem(prize.id, team);
-			listDiv.appendChild(item);
-		});
-	form.appendChild(listDiv);
-	form.appendChild(button);
-
-	return div;
-}
-
-function makeItem(prizeId, team) {
-	const p = document.createElement("p");
-	const label = document.createElement("label");
-	const input = document.createElement("input");
-	input.type = "radio";
-	input.name = prizeId;
-	input.classList = 'item';
-	input.value = team.name;
-	const span = document.createElement("span");
-	span.style.fontSize = '1.5rem';
-	span.innerHTML = `<b style="color:black;">${team.name}</b> <br> ${team.song}`;
-
-	p.appendChild(label);
-	label.appendChild(input);
-	label.appendChild(span);
-
-	input.addEventListener('click', (e) => {
-		const button = document.querySelector(`input[name=${prizeId}].btn`);
-		button.disabled = false;
-	});
-
-	return p;
-}
-
-function handleFormSubmit(form, prizeId) {
-	form.addEventListener('submit', (e) => {
-		const choice = document.querySelector(`input[name=${prizeId}]:checked`).value;
-		const data = {team: choice, title: voteTitle, name: prizeId};
-
-		fetch(`/${pollUrl}`, {
-			method: 'post',
-			body: JSON.stringify(data),
-			headers: new Headers({
-				'Content-Type': 'application/json'
-				})
-			})
-			.then(res => res.json())
-			.then(data => LS.writeVote(data))
-			.catch(err => console.log(err));
-
-		e.preventDefault();
-	});
-}
-
-function restoreMyChoice(prize) {
-	const titleMap = LS.getExistingTitleMap();
-	const nameMap = LS.getNameMap(titleMap);
-	const myChoice = nameMap.get(prize.id);
-
-	if(myChoice) {
-		const team = myChoice.team;
-		const myTeam = document.querySelector(`input[name=${prize.id}].item[value="${team}"]`);
-		myTeam.checked = true;
-		const items = document.querySelectorAll(`input[name=${prize.id}].item`);
-		items.forEach(item => item.disabled = true);
-		const button = document.querySelector(`input[name=${prize.id}].btn`);
-		button.value = `${prize.name} 투표 완료`;
-		button.classList.add("disabled");
-	}
-}
-
-function initVoteForm(poll) {
-	document.querySelector('#voteTitle').innerText = voteTitle;
-	const container = document.querySelector('#js-container');
-
-	/*
-	const prizes = [
-		{id: 'first', name: '가창상 (노래로 감동을 준 팀)'},
-		{id: 'second', name: '연주상 (기타 연주 잘한 팀)'},
-		{id: 'third', name: '발전상 (열정, 노력의 무대를 보여준 팀)'},
-		{id: 'fourth', name: '인기상 (즐거운 무대를 보여준 팀)'},
-	];
-	*/
-
-	poll.prizes.forEach((prize, index) => {
-		const chartId = `js-${prize.id}-chart-container`;
-		const form = makePoll(prize, index, poll.teams);
-		const chart = makeChart(chartId);
-
-		form.appendChild(chart);
-		container.appendChild(form);
-		showChart(chartId, prize.id);
-		handleFormSubmit(form, prize.id);
-
-		restoreMyChoice(prize);
-	});
-}
-
-function showResult() {
-	document.querySelector('#voteTitle').innerText = `${voteTitle} 결과`;
-
-	const polls = document.querySelectorAll('.poll');
-	polls.forEach(poll => poll.style.display = 'none');
-
-	const buttons = document.querySelectorAll('.btn');
-	buttons.forEach(button => button.style.display = 'none');
-}
-
-const firstDateIsPastDayComparedToSecond = (firstDate, secondDate) => {
-	if(firstDate.setHours(0,0,0,0) - secondDate.setHours(0,0,0,0) < 0) {
-		const title = document.querySelector('#voteTitle');
-		title.textContent = `${voteTitle} 마감`;
-		const items = document.querySelectorAll('input[type=radio]');
-		items.forEach(item => item.disabled = true);
-	}
-}
-
-function setVoteDueDate(poll) {
-	const dueDate = new Date(poll.dueDate);
-	firstDateIsPastDayComparedToSecond(dueDate, new Date());
-	setInterval(firstDateIsPastDayComparedToSecond, 1000 * 60, dueDate, new Date());
-}
-
-function initEventListener() {
-	const items = document.querySelectorAll('input.item'); 
-	items.forEach(item => item.addEventListener('change', playSound));
-}
-
 function init() {
 	const poll = JSON.parse('<%= poll %>'.replace(/&#34;/g, '"'));
 	voteTitle = poll.title;
@@ -369,72 +60,7 @@ function init() {
 	setVoteDueDate(poll);
 	initEventListener();
 }
-
 	</script>
-
-	<script>
-function getRandomInt(min, max) {
-	min = Math.ceil(min);
-	max = Math.floor(max);
-	return Math.floor(Math.random() * (max - min)) + min; //최댓값은 제외, 최솟값은 포함
-}
-
-function playSound(e) {
-	const min = 0;
-	const max = document.querySelectorAll('audio').length;
-	const dataKey = getRandomInt(min, max);
-	const audio = document.querySelector(`audio[data-key="${dataKey}"]`);
-	if (!audio) return;
-
-	audio.currentTime = 0;
-	audio.play();
-}
-	</script>
-
-	<style>
-.container {
-	border-top: 1px solid black;
-}
-
-.poll {
-	display: flex;
-	-- flex-direction: column;
-	flex-wrap: wrap;
-}
-
-.poll > p {
-	flex: 50%; /* or - flex: 0 50% - or - flex-basis: 50% - */
-	-- box-shadow: 0 0 0 1px black;
-}
-
-.chart {
-	height: 250px;
-	width: 100%;
-	margin: 0 0 80px 0;
-}
-
-.disabled {
-	pointer-events: none;
-}
-
-.wrapper {
-	text-align: center;
-}
-
-.btn {
-	display: block;
-	margin-right: auto;
-	margin-left: auto;
-}
-
-#voteTitle {
-	margin: auto;
-	width: 50%;
-	// border: 2px solid green;
-	padding: 10px;
-	text-align: center;
-}
-	</style>
 
 </body>
 </html>

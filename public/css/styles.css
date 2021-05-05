@@ -1,0 +1,54 @@
+.container {
+	width: 97%;
+}
+
+.prize {
+	color: chocolate;
+}
+
+.poll {
+	border-top: 1px solid black;
+	display: flex;
+	-- flex-direction: column;
+	flex-wrap: wrap;
+}
+
+.poll > p {
+	flex: 0 50%; /* or - flex: 0 50% - or - flex-basis: 50% - */
+	-- box-shadow: 0 0 0 1px black;
+}
+
+.chart {
+	height: 250px;
+	width: 100%;
+	margin: 0 0 50px 0;
+}
+
+.disabled {
+	pointer-events: none;
+}
+
+.wrapper {
+	text-align: center;
+}
+
+.btn {
+	display: block;
+	margin-right: auto;
+	margin-left: auto;
+	margin-bottom: 12px;
+	min-width: 25%;
+}
+
+label > span > b {
+	color: black;
+}
+
+form > div > p {
+	margin: 7px 0 7px 0;
+}
+
+#voteTitle {
+	padding: 10px;
+	text-align: center;
+}
