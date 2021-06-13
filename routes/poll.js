@@ -55,44 +55,50 @@ router.get('/zerovote/:voteTitle', (req, res) => {
 
 router.get('/info/:voteTitle', (req, res) => {
 	const poll = Poll.findOne({'title': `${req.params.voteTitle}`}, function (err, poll) {
-		if (err) res.send(err)
+		if (err) res.send(err);
 		const pollJson = JSON.stringify(poll);
 		res.render('poll', {poll: pollJson});
 	});
 });
 
 router.get('/result/:voteTitle', (req, res) => {
-	const votes = Vote.find({'title': `${req.params.voteTitle}`, points: 1}, function (err, votes) {
-		  if (err) res.send(err)
+	Poll.findOne({'title': `${req.params.voteTitle}`}, function (err, poll) {
+		if (err) res.send(err);
+	}).then(function (poll) {
+		const votes = Vote.find({'title': `${req.params.voteTitle}`, points: 1}, function (err, votes) {
+			if (err) res.send(err);
+			pollJson = JSON.stringify(poll);
 			votesJson = JSON.stringify(votes);
-			res.render('result', {votes: votesJson});
+			res.render('result', {poll: pollJson, votes: votesJson});
 		});
+	})
 });
 
 router.get('/:voteTitle/:prizeId', (req, res) => {
-	Vote.find({'title': `${req.params.voteTitle}`, 'name': `${req.params.prizeId}`})
-		.then(votes => res.json({success: true, votes: votes}));
+Vote.find({'title': `${req.params.voteTitle}`, 'name': `${req.params.prizeId}`})
+	.then(votes => res.json({success: true, votes: votes}));
 });
 
 router.post('/', (req, res) => {
-	const newVote = {
-		title: req.body.title,
-		name: req.body.name,
-		team: req.body.team,
-		points: 1,
-		createdAt: new Date().toString(),
-		ip: req.headers['x-forwarded-for'] || req.connection.remoteAddress,
-	}
+const newVote = {
+	title: req.body.title,
+	name: req.body.name,
+	team: req.body.team,
+	points: 1,
+	createdAt: new Date().toString(),
+	ip: req.headers['x-forwarded-for'] || req.connection.remoteAddress,
+	userAgent: req.body.userAgent,
+}
 
-	new Vote(newVote).save().then(vote => {
-		pusher.trigger('tongma-poll', vote.name, {
-			title: vote.title,
-			team: vote.team,
-			points: vote.points
-		});
+new Vote(newVote).save().then(vote => {
+	pusher.trigger('tongma-poll', vote.name, {
+		title: vote.title,
+		team: vote.team,
+		points: vote.points
 	});
+});
 
-	return res.json({success: true, message: 'Thank you for voting', vote: newVote});
+return res.json({success: true, message: 'Thank you for voting', vote: newVote});
 });
 
 module.exports = router;

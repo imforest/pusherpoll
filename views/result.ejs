@@ -2,193 +2,79 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-	<!-- Compiled and minified CSS -->
+	<!--Import Google Icon Font-->
+	<link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+	<!--Import materialize.css-->
 	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/css/materialize.min.css">
-  <title>Poll Result</title>
+	<!--Let browser know website is optimized for mobile-->
+	<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+	<!-- Using a favicon-->
+	<link rel="icon" type="image/png" sizes="96x96" href="/favicon-32x32.png">
+
+	<link rel="stylesheet" href="/css/styles.css">
+  <title>투표 결과</title>
 </head>
-<body onload="showResult()">
-  <h4 id="voteTitle">투표 결과</h4>
+
+<body onload="init()">
+  <h5 id="voteTitle">투표 결과</h5>
 	<% if(votes) {  %>
 		<div id="js-container" class="container"></div>	
 	<% } else { %>
 		<div>투표 결과가 없습니다.</div>
 	<% } %>
 
+	<div class="wrapper">
+		<a href="javascript:history.back()">
+			<input type="button" value="돌아가기" class="btn">
+		</a>
+	</div>
+
 	<!-- Compiled and minified JavaScript -->
-	<script src="https://code.jquery.com/jquery-3.6.0.js" integrity="sha256-H+K7U5CnXl1h5ywQfKtSj8PCmoN9aaq30gDh27Xc0jk=" crossorigin="anonymous"></script>
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js" ></script>
 	<script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
 	<script src="https://cdn.jsdelivr.net/npm/pusher-js@7.0.3/dist/web/pusher.min.js"></script>
 	<script src="https://cdnjs.cloudflare.com/ajax/libs/canvasjs/1.7.0/canvasjs.min.js"></script> 
+
+	<!-- Local JavaScript -->
+	<script src="/js/main.js"></script>
+	<script src="/js/poll.js"></script>
+	<script src="/js/audio.js"></script>
+	<script src="/js/localstorage.js"></script>
+
 	<script>
+const bodyElem = document.querySelector('body');
 
-const pollUrl='poll';
-const container = document.querySelector('#js-container');
-const totalVoteMap = new Map();
-var voteTitle;
-
-function setPusher(chart, prizeId) {
-	// Enable pusher logging - don't include this in production
-	Pusher.logToConsole = true;
-
-	var pusher = new Pusher('ff4bf85a2ebd9ce87f14', {
-		cluster: 'ap3',
-		encrypted: true
-	});
-
-	var channel = pusher.subscribe('tongma-poll');
-	channel.bind(prizeId, function(data) {
-		chart.options.data[0].dataPoints.map(x => {
-			if(x.label == data.team) {
-				x.y += data.points;
-				totalVoteMap.set(prizeId, totalVoteMap.get(prizeId) + data.points);
-				chart.options.title.text = getTitle(prizeId);
-				return x;
-			} else {
-				return x;
-			}
-		});
-		chart.render();
-	});
+function init() {
+	setVoteTite();
+	showResultChart();
 }
 
-function compareDataPointYDescend(dataPoint1, dataPoint2) {
-	return dataPoint2.y - dataPoint1.y;
+function getVoteTitle() {
+	const encoded = location.pathname.substring(location.pathname.lastIndexOf('/')+1);
+	return decodeURI(encoded);
 }
 
-function getSum(total, vote) {
-	return total + vote.points;
+function setVoteTite() {
+	const voteTitle = document.querySelector('#voteTitle');
+	voteTitle.innerHTML = getVoteTitle() + ' 결과';
 }
 
-function getTitle(prizeId) {
-	return `${prizeId} 총 투표수 ${totalVoteMap.get(prizeId)}`;
-}
-
-function paintChart(containerId, prizeId, data) {
-	const votes = data.votes.sort( (a, b) => a.team < b.team ? -1 : 1);
-	totalVoteMap.set(prizeId, votes.reduce(getSum, 0));
-	// Const vote points - acc/current
-	const voteCounts = votes.reduce(
-		(acc, vote) => 
-			((acc[vote.team] = (acc[vote.team] || 0) + vote.points), acc), {});
-
-	let dataPoints = [];
-	const entries = Object.entries(voteCounts);
-	entries.forEach(team => {
-		dataPoints.push({
-			label: team[0], 
-			y: team[1]
-		});
-	});
-
-	var chart = new CanvasJS.Chart(containerId, {
-		animationEnabled: true,
-		theme: 'light2',
-		title: {
-				text: getTitle(prizeId)
-		},
-		axisX: {
-			interval: 1,
-			labelAngle: 45
-		},
-		axisY: {
-				title: '득표수',
-				titleFontSize: 24,
-				includeZero: true
-		},
-		data: [{
-				type: 'column',
-				yValueFormatString: '#,### 표',
-				dataPoints: dataPoints
-		}]
-	});
-
-	// decending order by points
-	chart.options.data[0].dataPoints.sort(compareDataPointYDescend);
-	chart.render();
-
-	setPusher(chart, prizeId);
-}
-
-function showChart(containerId, prizeId) {
-	fetch(`/${pollUrl}/${voteTitle}/${prizeId}`)
-		.then(res => res.json())
-		.then(data => {
-			paintChart(containerId, prizeId, data);
-		});
-}
-
-function makeChart(chartId) {
-	const div = document.createElement("div");
-	div.id = chartId;
-	div.classList = 'chart';
-	return div;
-}
-
-function showResult() {
-	const votes = JSON.parse('<%= votes %>'.replace(/&#34;/g, '"'));
+function showResultChart() {
 	const container = document.querySelector('#js-container');
-	voteTitle = votes[0].title;
+	const poll = JSON.parse('<%= poll %>'.replace(/&#34;/g, '"'));
+	const votes = JSON.parse('<%= votes %>'.replace(/&#34;/g, '"'));
+	const data = {votes: votes};
+	voteTitle = poll.title;
 
-	const prizes = [
-		{id: 'first', name: '가창상 (노래로 감동을 준 팀)'},
-		{id: 'second', name: '연주상 (기타 연주 잘한 팀)'},
-		{id: 'third', name: '발전상 (열정, 노력의 무대를 보여준 팀)'},
-		{id: 'fourth', name: '인기상 (즐거운 무대를 보여준 팀)'},
-	];
-
-	prizes.forEach(prize => {
+  poll.prizes.forEach((prize, index) => {
 		const chartId = `js-${prize.id}-chart-container`;
-		const chartName = document.createElement('h4');
-		chartName.textContent = prize.name;
-
 		const chart = makeChart(chartId);
 
-		container.appendChild(chartName);
 		container.appendChild(chart);
-		showChart(chartId, prize.id);
-	});
+		paintPieChart(chartId, prize, data);
+  });
 }
-
 	</script>
 
-	<style>
-.container {
-	border-top: 1px solid black;
-}
-
-.poll {
-	height: 400px;
-	display: flex;
-	flex-direction: column;
-	flex-wrap: wrap;
-}
-
-.chart {
-	height: 250px;
-	width: 100%;
-	margin: 0 0 80px 0;
-}
-
-.disabled {
-	pointer-events: none;
-}
-
-.wrapper {
-	text-align: center;
-}
-
-.result {
-	position: absolute;
-	top: 50%;
-}
-
-#voteTitle {
-	margin: auto;
-	width: 50%;
-	// border: 2px solid green;
-	padding: 10px;
-	text-align: center;
-}
-	</style>
 </body>
 </html>

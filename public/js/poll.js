@@ -20,7 +20,7 @@ function createButton(prize) {
 		const button = document.querySelector(`input[name=${prize.id}].btn`);
 		button.value = `${prize.name} 투표 완료`;
 		button.classList.add("disabled");
-		});
+	});
 
 	return input;
 }
@@ -73,3 +73,14 @@ function makeItem(prizeId, team) {
 	return p;
 }
 
+function makePrizeName(prize, index) {
+	const div = document.createElement("div");
+	div.classList = 'container';
+	const prizeName = document.createElement("h6");
+	prizeName.classList = 'prize';
+	prizeName.textContent = `${index + 1}. ${prize.name}`;
+
+	div.appendChild(prizeName);
+
+	return div;
+}

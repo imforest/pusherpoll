@@ -26,6 +26,10 @@ const VoteSchema = new Schema({
 		type: String,
 		required: true
 	},
+	userAgent: {
+		type: String,
+		required: true
+	},
 });
 
 // Create collection and add schema
