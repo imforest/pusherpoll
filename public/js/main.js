@@ -41,8 +41,75 @@ function getTitle(prizeId) {
 	return `총 투표수 ${totalVoteMap.get(prizeId)}`;
 }
 
+/**
+ *  * Filter array items based on search criteria (query)
+ *   */
+function filterItems(arr, query) {
+	return arr.filter(function(el) {
+			return el.name.toLowerCase() === query.toLowerCase();
+	})
+}
+
+function paintPieChart(containerId, prize, data) {
+	const votesByPrizeId = filterItems(data.votes, prize.id);
+	const votes = votesByPrizeId.sort( (a, b) => a.team < b.team ? -1 : 1);
+	totalVoteMap.set(prize.id, votes.reduce(getSum, 0));
+	// Const vote points - acc/current
+	const voteCounts = votes.reduce(
+		(acc, vote) => 
+			((acc[vote.team] = (acc[vote.team] || 0) + vote.points), acc), {});
+
+	const entries = Object.entries(voteCounts);
+	let  maxCount = 0;
+	entries.forEach(team => team[1] > maxCount ? maxCount = team[1] : '');
+
+	let dataPoints = [];
+	entries.forEach(team => {
+		dataPoints.push({
+			name: team[0], 
+			y: team[1],
+			exploded: team[1] == maxCount ? true : false,
+		});
+	});
+	
+	var chart = new CanvasJS.Chart(containerId, {
+		exportEnabled: false,
+		animationEnabled: true,
+		title:{
+			text: `${prize.name}`.split(' ')[0]
+		},
+		legend:{
+			cursor: "pointer",
+			itemclick: explodePie
+		},
+		data: [{
+			type: "pie",
+			showInLegend: false,
+			toolTipContent: "{name}: <strong>{y}표</strong>",
+			indexLabel: "{name} - {y}표",
+			dataPoints: dataPoints
+		}]
+	});
+
+	// decending order by points
+	chart.options.data[0].dataPoints.sort(compareDataPointYDescend);
+	chart.render();
+
+	setPusher(chart, prize.id);
+}
+
+function explodePie (e) {
+	if(typeof (e.dataSeries.dataPoints[e.dataPointIndex].exploded) === "undefined" || !e.dataSeries.dataPoints[e.dataPointIndex].exploded) {
+		e.dataSeries.dataPoints[e.dataPointIndex].exploded = true;
+	} else {
+		e.dataSeries.dataPoints[e.dataPointIndex].exploded = false;
+	}
+	e.chart.render();
+}                            
+
 function paintChart(containerId, prizeId, data) {
-	const votes = data.votes.sort( (a, b) => a.team < b.team ? -1 : 1);
+	const votesByPrizeId = filterItems(data.votes, prizeId);
+	const votes = votesByPrizeId.sort( (a, b) => a.team < b.team ? -1 : 1);
 	totalVoteMap.set(prizeId, votes.reduce(getSum, 0));
 	// Const vote points - acc/current
 	const voteCounts = votes.reduce(
@@ -163,13 +230,7 @@ function initVoteForm(poll) {
 }
 
 function showResult() {
-	document.querySelector('#voteTitle').innerText = `${voteTitle} 결과`;
-
-	const polls = document.querySelectorAll('.poll');
-	polls.forEach(poll => poll.style.display = 'none');
-
-	const buttons = document.querySelectorAll('.btn');
-	buttons.forEach(button => button.style.display = 'none');
+	window.location.href = `/poll/result/${voteTitle}`;
 }
 
 const firstDateIsPastDayComparedToSecond = (firstDate, secondDate) => {

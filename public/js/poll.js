@@ -73,3 +73,14 @@ function makeItem(prizeId, team) {
 	return p;
 }
 
+function makePrizeName(prize, index) {
+	const div = document.createElement("div");
+	div.classList = 'container';
+	const prizeName = document.createElement("h6");
+	prizeName.classList = 'prize';
+	prizeName.textContent = `${index + 1}. ${prize.name}`;
+
+	div.appendChild(prizeName);
+
+	return div;
+}
